@@ -4,10 +4,12 @@
 #include <stdarg.h>
 
 void proxy_init(void);
-void test_init(void);
 
-int g_test;
 HMODULE g_self;
+#ifdef DDJP_TEST
+/* 試験版だけ: DDJP_TEST=1 で試験の操作口、DDJP_LOG=<ファイル> で記録 */
+void test_init(void);
+int g_test;
 static FILE *g_log;
 
 void dlog(const char *fmt, ...)
@@ -20,6 +22,7 @@ void dlog(const char *fmt, ...)
     fputc('\n', g_log);
     fflush(g_log);
 }
+#endif
 
 void patch_bytes(uint32_t at, const void *b, int n)
 {
@@ -83,6 +86,7 @@ static int is_target(void)
     return 1;
 }
 
+#ifdef DDJP_TEST
 static LONG CALLBACK veh(EXCEPTION_POINTERS *e)
 {
     static int n;
@@ -95,15 +99,19 @@ static LONG CALLBACK veh(EXCEPTION_POINTERS *e)
     }
     return EXCEPTION_CONTINUE_SEARCH;
 }
+#endif
 
 BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID r)
 {
     if (reason == DLL_PROCESS_ATTACH) {
+#ifdef DDJP_TEST
         char buf[MAX_PATH];
+#endif
         g_self = h;
         DisableThreadLibraryCalls(h);
         proxy_init();
         if (!is_target()) return TRUE;
+#ifdef DDJP_TEST
         g_test = GetEnvironmentVariableA("DDJP_TEST", buf, sizeof buf) > 0;
         if (GetEnvironmentVariableA("DDJP_LOG", buf, sizeof buf) > 0) g_log = fopen(buf, "w");
         dlog("ddjp start test=%d", g_test);
@@ -113,6 +121,10 @@ BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID r)
         text_init();
         if (GetEnvironmentVariableA("DDJP_NOFONT", buf, sizeof buf) <= 0) font_init();
         if (g_test) test_init();
+#else
+        text_init();
+        font_init();
+#endif
     }
     return TRUE;
 }

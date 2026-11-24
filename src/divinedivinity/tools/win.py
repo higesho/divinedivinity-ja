@@ -1,6 +1,6 @@
 # Drive the test game.  The game window is found by its unique title "DDJP TEST" (never the foreground window);
 # input goes through the test DLL's shared memory (virtual mouse/keyboard), screenshots via PrintWindow.
-#   python tools/win.py start [ENV=VAL..]   copy build/version.dll into the game, launch div.exe with DDJP_TEST=1
+#   python tools/win.py start [ENV=VAL..]   copy build/test/version.dll (試験版: src/build.bat test) into the game, launch div.exe with DDJP_TEST=1
 #   python tools/win.py shot NAME           -> capture/NAME.png
 #   python tools/win.py key K [K..]         tap keys (esc enter space tab up down left right f1.. a..z 0..9 or 0xVK)
 #   python tools/win.py click X Y [right]   move the virtual cursor (client coords) and click
@@ -67,7 +67,7 @@ def start():
     # sinfo.000 = (1,1) marks an unclean exit and makes the game ask to reset its configuration
     try: os.remove(os.path.join(GAME, 'sinfo.000'))
     except OSError: pass
-    shutil.copy(os.path.join(ROOT, 'build', 'version.dll'), os.path.join(GAME, 'version.dll'))
+    shutil.copy(os.path.join(ROOT, 'build', 'test', 'version.dll'), os.path.join(GAME, 'version.dll'))   # 試験版を使う
     env = dict(os.environ)
     env['DDJP_TEST'] = '1'
     env['__COMPAT_LAYER'] = 'DWM8And16BitMitigation'   # 16-bit display modes for DirectDraw

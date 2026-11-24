@@ -11,7 +11,11 @@
 typedef struct { uint64_t h; u32 off; } TEnt;
 #pragma pack(pop)
 static const TEnt *g_tab; static u32 g_ntab; static const char *g_blob;
-static int g_logdraw;
+#ifdef DDJP_TEST
+static int g_logdraw;   /* DDJP_LOGDRAW: 訳のない文字列を記録（試験版だけ） */
+#else
+#define g_logdraw 0
+#endif
 
 static uint64_t fnv64(const u8 *s, int n)
 {
@@ -302,14 +306,22 @@ static const WCHAR *__fastcall h_GetAnswerText(void *self, void *edx)
 }
 
 /* ---------------- draw-time lookup (exe strings) + log ---------------- */
+#ifdef DDJP_TEST
 static u32 *g_seen; static int g_nseen, g_capseen;
+#endif
 const char *text_lookup(const char *s)
 {
     const char *t;
-    int n = (int)strlen(s), i;
+    int n = (int)strlen(s);
+#ifdef DDJP_TEST
+    int i;
     u32 h;
+#endif
     if (!n) return NULL;
     t = tr_find(s, n);
+#ifndef DDJP_TEST
+    return t;
+#else
     if (t || !g_logdraw) return t;
     for (i = 0; i < n; i++) if ((u8)s[i] >= 0xa1) {
         char hx[600]; int k;
@@ -327,6 +339,7 @@ const char *text_lookup(const char *s)
     g_seen[g_nseen++] = h;
     dlog("DRAW|%s", s);
     return NULL;
+#endif
 }
 
 /* div.exe round-trips text through MultiByteToWideChar/WideCharToMultiByte(CP_ACP) for its optional
@@ -344,8 +357,10 @@ static int WINAPI h_WC2MB(UINT cp, DWORD fl, LPCWCH w, int wn, LPSTR s, int n, L
 
 void text_init(void)
 {
+#ifdef DDJP_TEST
     char buf[MAX_PATH];
     g_logdraw = GetEnvironmentVariableA("DDJP_LOGDRAW", buf, sizeof buf) > 0;
+#endif
     load_dict();
     GetTempPathA(MAX_PATH, g_tmpdir);
     lstrcatA(g_tmpdir, "DivinityJP");

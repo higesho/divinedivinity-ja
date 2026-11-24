@@ -2,7 +2,9 @@
 import os, zipfile, shutil
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 REL = os.path.join(ROOT, 'release')
-shutil.copy(os.path.join(ROOT, 'build', 'version.dll'), os.path.join(REL, 'version.dll'))
+dll = os.path.join(ROOT, 'build', 'version.dll')   # 配布版（build.bat 引数なし）。試験版 build/test は入れない
+if b'DDJP_TESTIO' in open(dll, 'rb').read(): raise SystemExit('試験版の DLL です。src/build.bat を引数なしで作り直してください')
+shutil.copy(dll, os.path.join(REL, 'version.dll'))
 txt = os.path.join(REL, '読んでください.txt')
 s = open(txt, encoding='utf-8').read().replace('\r\n', '\n')
 open(txt, 'w', encoding='utf-8-sig', newline='\r\n').write(s.lstrip('\ufeff'))
